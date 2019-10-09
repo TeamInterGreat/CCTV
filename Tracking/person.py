@@ -13,6 +13,7 @@ class Person:
         self.leftTime = 0
         self.photo = []
         self.pos = []  # x,y,t
+        self.vel = []
 
     def updatePic(self, pic):
         self.photo = pic
@@ -28,5 +29,13 @@ class Person:
         self.pos.append(point)
         self.box.append(boxes)
 
+    def updateVel(self,vel):
+        self.vel.append(vel)
+
     def getLastBox(self, frameNo):
         return self.box[-1][frameNo]
+
+    def getLastVel(self):
+        if len(self.vel):
+            return self.vel[-1]
+        return [0,0]

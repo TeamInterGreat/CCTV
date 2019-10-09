@@ -46,10 +46,14 @@ def groupCircles(centers, radii, bodies):
             retBodies.append([[], bodies[1][a]])
     return points, retBodies
 
+
 def toPosint(a):
     b = int(a)
-    return b if b>0 else 0
+    return b if b > 0 else 0
 
+
+b = 0.6
+a = 0.6
 
 fig = plt.figure()
 ax = Axes3D(fig)
@@ -129,11 +133,26 @@ for count in range(1101):
         found = False
         for p in activePeople:
             lp = p.getLastPos()
+            lv = p.getLastVel()
             if lp[2] >= count - 50 and lp[2] != count:
                 distance = (c[0] - lp[0]) ** 2 + (c[1] - lp[1]) ** 2
+                if lv[0] != 0 and lv[1] != 0 and c[0] != lp[0] and c[1] != lp[1]:
+                    dirn = (c[1] - lp[1]) / (c[0] - lp[0])
+                    velDir = lv[1] / lv[0]
+                    if distance < 10000 and (dirn / velDir < 0.8 or dirn / velDir > 1.2):
+                        newp = [c[0] * b + lp[0] * (1 - b), c[1] * b + lp[1] * (1 - b), count]
+                        p.update(newp, fb)
+                        if lp[2] < count - 10:
+                            if fb[0] != []:
+                                p.photo = frame[0][fb[0][0][1]:fb[0][1][1], fb[0][0][0]:fb[0][1][0]]
+                            else:
+                                p.photo = frame[1][fb[1][0][1]:fb[1][1][1], fb[1][0][0]:fb[1][1][0]]
+                        found = True
+                        break
                 if distance < 3000:
-                    p.update([*c, count],fb)
-                    if lp[2]<count-10:
+                    newp = [c[0] * b + lp[0] * (1 - b), c[1] * b + lp[1] * (1 - b), count]
+                    p.update(newp, fb)
+                    if lp[2] < count - 10:
                         if fb[0] != []:
                             p.photo = frame[0][fb[0][0][1]:fb[0][1][1], fb[0][0][0]:fb[0][1][0]]
                         else:
@@ -141,14 +160,21 @@ for count in range(1101):
                     found = True
                     break
         if not found:
-            p = person.Person(peopleCount,count)
-            p.update([*c, count],fb)
+            p = person.Person(peopleCount, count)
+            p.update([*c, count], fb)
             if fb[0] != []:
                 p.photo = frame[0][fb[0][0][1]:fb[0][1][1], fb[0][0][0]:fb[0][1][0]]
             else:
                 p.photo = frame[1][fb[1][0][1]:fb[1][1][1], fb[1][0][0]:fb[1][1][0]]
             activePeople.append(p)
             peopleCount += 1
+
+    for ppl in activePeople:
+        p = ppl.pos
+        if len(p) > 1:
+            vx = (p[-1][0] - p[-2][0]) / (p[-1][2] - p[-2][2]) * a + ppl.getLastVel()[0] * (1 - a)
+            vy = (p[-1][1] - p[-2][1]) / (p[-1][2] - p[-2][2]) * a + ppl.getLastVel()[1] * (1 - a)
+            ppl.updateVel([vx, vy])
 
     for p in activePeople:
         lp = p.getLastPos()
@@ -169,6 +195,7 @@ for count in range(1101):
         break
 
 for p in activePeople:
-    pp = np.array(p.pos)
-    ax.scatter(pp[:, 0], pp[:, 1], pp[:, 2])
+    if len(p.pos) > 50:
+        pp = np.array(p.pos)
+        ax.scatter(pp[:, 0], pp[:, 1], pp[:, 2])
 plt.show()
